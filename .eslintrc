@@ -1,0 +1,7 @@
+{
+    "parser": "babel-eslint",
+    "rules": {
+        "no-unused-vars": "error",
+        "semi": ["error", "never"]
+    }
+}
