@@ -35,7 +35,6 @@ module.exports = {
     },
     devServer: {
         contentBase: 'build',
-        hot: isDev,
         port: 9000
     },
     plugins: [
@@ -64,13 +63,8 @@ module.exports = {
             },
             {
                 test: /\.css$/i,
-                use: [
-                    {
+                use: [{
                         loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            hmr: isDev,
-                            reloadAll: true
-                        }
                     }, 
                     'css-loader'
                 ]
