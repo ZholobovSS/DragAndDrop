@@ -1,0 +1,23 @@
+
+* {
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    background: whitesmoke;
+    min-height: 100vh;
+}
+
+.draggbleArea__wr {
+    background: white;
+    width: 30%;
+}
+
+.draggbleArea__wr:first-of-type {
+    margin-left: 0 !important;
+}
+
+.draggbleArea__wr:last-of-type {
+    margin-right: 0 !important;
+}
