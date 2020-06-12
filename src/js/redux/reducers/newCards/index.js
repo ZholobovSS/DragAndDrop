@@ -1,8 +1,9 @@
-// import * as CONSTANTS from '../../constants'
+import * as CONSTANTS from '../../constants'
 
 const newCards = ( state = [], action ) => {
-    console.log(state)
     switch (action.type) {
+        case CONSTANTS.ADD_NEW:
+            return [ ...state, action.payload ]
         default:
             return state
     }

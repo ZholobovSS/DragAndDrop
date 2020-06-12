@@ -1,5 +1,5 @@
 const initialState = {
-    newCards: [{name: "newOne"}],
+    newCards: [],
     progressCards: [],
     doneCards: []
 }
