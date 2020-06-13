@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import * as ACTIONS from './redux/actions'
 
 import store from './redux/index'
-import {Element, FormElement, validationsCond, CardsWr} from './cards'
+import {Element, FormElement, validationsCond, CardsWr, Card} from './cards'
 
 
 const addButton = new Element('[data-add]')
@@ -29,13 +29,9 @@ textField.addHandler( 'input', () => {
 })
 
 addButton.addHandler('click', () => {
-    uuidv4()
-    store.dispatch( ACTIONS.ADD_NEW( { 
-        title: titleField.$el.value,
-        text: textField.$el.value,
-        id: uuidv4(),
-        position: 1,
-    }))
+    store.dispatch( ACTIONS.ADD_NEW(
+        new Card(1, titleField.$el.value, textField.$el.value, uuidv4())
+    ))
 
     titleField.clear()
     textField.clear()
@@ -44,12 +40,8 @@ addButton.addHandler('click', () => {
 
 store.subscribe( () => {
     let newCards = store.getState().newCards
+    cardsWr1.clear()
     newCards.forEach( el => {
-        cardsWr1.addCards(el.title, el.text)
+        cardsWr1.addCard(el.$el)
     } )
 } )
-
-
-
-
-

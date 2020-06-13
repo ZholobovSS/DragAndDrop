@@ -1,6 +1,6 @@
 export class Element {
-    constructor (selector) {
-        this.$el = document.querySelector(selector)
+    constructor (data) {
+        this.$el = (typeof data === 'object') ? data : document.querySelector(data)
         this.disabled = false
     }
 
@@ -48,28 +48,51 @@ export class FormElement extends Element {
     }
 }
 
+export class Card extends Element{
+    constructor(type, title, text, id) {
+        super(document.createElement('div'))
+        this.type = type
+        this.title = title
+        this.text = text
+        this.id = id
+        this.template = ` 
+            <div draggable="true" class="card-body">
+                <h5 class="card-title">${this.title = title}</h5>
+                <p class="card-text">${this.text}</p>
+                <a href="#" class="btn btn-primary">Go somewhere</a>
+            </div>` 
+        this.render()
+    }
+
+    render() {
+        this.$el.classList.add("card","my-3")
+        this.$el.insertAdjacentHTML('beforeend', this.template)
+    }
+
+    draggableOn() {
+        this.$el.addEventListener()
+    }
+}
+
 export class CardsWr extends Element {
     constructor (selector) {
         super(selector)
         this.type = +this.$el.dataset.cards
+        this.contains = []
     }
 
-    addCards(title, text) {
-        let template = `
-            <div class="card my-3">
-                <div class="card-body">
-                    <h5 class="card-title">${title}</h5>
-                    <p class="card-text">${text}</p>
-                    <a href="#" class="btn btn-primary">Go somewhere</a>
-                </div>
-            </div>`
-        this.$el.insertAdjacentHTML('beforeend', template)
+    addCard(card) {
+        this.$el.append(card)
+    }
+
+    clear() {
+        this.$el.innerHTML = ''
     }
 }
 
 export const validationsCond = {
     title: {
-        func: e => e.value.trim().length > 3,
+        func: e => e.value.trim().length >= 3,
         message: {
             true: '',
             false: "Too short. Min 3 symbols."
