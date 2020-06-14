@@ -1,12 +1,8 @@
 import { combineReducers } from 'redux'
-import doneCards from './doneCards'
-import progressCards from './progressCards'
-import newCards from './newCards'
+import cards from './cards'
 
 const rootReducer = combineReducers({
-    newCards,
-    progressCards,
-    doneCards
+    cards
 })
 
 export default rootReducer

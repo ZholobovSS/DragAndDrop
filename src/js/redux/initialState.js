@@ -1,7 +1,5 @@
 const initialState = {
-    newCards: [],
-    progressCards: [],
-    doneCards: []
+    cards: []
 }
 
 export default initialState
