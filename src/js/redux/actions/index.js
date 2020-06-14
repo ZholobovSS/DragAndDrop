@@ -6,3 +6,10 @@ export const ADD_NEW = (card) => {
         payload: card
     }
 }
+
+export const CHANGE_TYPE = (cards) => {
+    return {
+        type: CONSTANTS.CHANGE_TYPE,
+        payload: cards
+    }
+}

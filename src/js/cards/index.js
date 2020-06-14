@@ -70,11 +70,13 @@ class Draggable extends Element {
         })
     }
 
-    onDrop() {
+    onDrop(type) {
         this.addHandler('drop', ev => {
             ev.preventDefault()
-            let $dragEl = store.getState().cards.find( el => el.id === ev.dataTransfer.getData('id'))?.el
-            this.$el.appendChild($dragEl)
+            let dragID = ev.dataTransfer.getData('id')
+            let cards = store.getState().cards
+            cards = cards.map( el => ((el.id !== dragID) ? el : {...el, type}))
+            store.dispatch(ACTIONS.CHANGE_TYPE(cards))
         })
     }
 
@@ -133,11 +135,11 @@ export class CardsWr extends Draggable {
 
     setDraggableHandler() {
         this.onDragOver()
-        this.onDrop()
+        this.onDrop(this.type)
     }
 
     addCard(card) {
-        this.$el.append(card)
+        this.$el.appendChild(card)
     }
 
     clear() {
