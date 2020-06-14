@@ -60,13 +60,6 @@ class Draggable extends Element {
         })
     }
 
-    onDragEnd() {
-        this.addHandler('dragend', ev => {
-            this.removeClass('draggable')
-            
-        })
-    }
-
     onDragOver() {
         this.addHandler('dragover', ev => {
             ev.preventDefault()
@@ -77,10 +70,14 @@ class Draggable extends Element {
         this.addHandler('drop', ev => {
             ev.preventDefault()
             let $dragEl = document.querySelector(`.${this.draggableClass}`)
-            console.log($dragEl)
             this.$el.appendChild($dragEl)
         })
- 
+    }
+
+    onDragEnd() {
+        this.addHandler('dragend', ev => {
+            this.removeClass('draggable')
+        })
     }
 }
 
