@@ -11,7 +11,9 @@ import {Element, FormElement, validationsCond, CardsWr, Card} from './cards'
 const addButton = new Element('[data-add]')
 const titleField = new FormElement('[data-title]')
 const textField = new FormElement('[data-text]')
-const cardsWr1 = new CardsWr('[data-cards]')
+const cardsWr1 = new CardsWr('[data-cards="1"]')
+const cardsWr2 = new CardsWr('[data-cards="2"]')
+const cardsWr3 = new CardsWr('[data-cards="3"]')
 
 
 titleField.addHandler( 'input', () => {

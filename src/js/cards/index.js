@@ -48,7 +48,43 @@ export class FormElement extends Element {
     }
 }
 
-export class Card extends Element{
+class Draggable extends Element {
+    constructor(data) {
+        super(data)
+        this.draggableClass = 'draggable'
+    }
+
+    onDragStart() {
+        this.addHandler('dragstart', ev => {
+            this.addClass(this.draggableClass)
+        })
+    }
+
+    onDragEnd() {
+        this.addHandler('dragend', ev => {
+            this.removeClass('draggable')
+            
+        })
+    }
+
+    onDragOver() {
+        this.addHandler('dragover', ev => {
+            ev.preventDefault()
+        })
+    }
+
+    onDrop() {
+        this.addHandler('drop', ev => {
+            ev.preventDefault()
+            let $dragEl = document.querySelector(`.${this.draggableClass}`)
+            console.log($dragEl)
+            this.$el.appendChild($dragEl)
+        })
+ 
+    }
+}
+
+export class Card extends Draggable {
     constructor(type, title, text, id) {
         super(document.createElement('div'))
         this.type = type
@@ -67,18 +103,22 @@ export class Card extends Element{
     render() {
         this.$el.classList.add("card","my-3")
         this.$el.insertAdjacentHTML('beforeend', this.template)
-    }
-
-    draggableOn() {
-        this.$el.addEventListener()
+        this.onDragStart()
+        this.onDragEnd()
     }
 }
 
-export class CardsWr extends Element {
+export class CardsWr extends Draggable {
     constructor (selector) {
         super(selector)
         this.type = +this.$el.dataset.cards
         this.contains = []
+        this.setDraggableHandler()
+    }
+
+    setDraggableHandler() {
+        this.onDragOver()
+        this.onDrop()
     }
 
     addCard(card) {
