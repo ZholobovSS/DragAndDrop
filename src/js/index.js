@@ -1,11 +1,8 @@
 import 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.css'
 import '../css/main.css'
-import { v4 as uuidv4 } from 'uuid'
-import * as ACTIONS from './redux/actions'
-
-import store from './redux/index'
 import {Element, FormElement, validationsCond, CardsWr, Card} from './cards'
+import { v4 as uuidv4 } from 'uuid'
 
 
 const addButton = new Element('[data-add]')
@@ -31,19 +28,10 @@ textField.addHandler( 'input', () => {
 })
 
 addButton.addHandler('click', () => {
-    store.dispatch( ACTIONS.ADD_NEW(
-        new Card(1, titleField.$el.value, textField.$el.value, uuidv4())
-    ))
+    
+    new Card(1, titleField.$el.value, textField.$el.value, uuidv4())
 
     titleField.clear()
     textField.clear()
     addButton.setDisabled(true)
 })
-
-store.subscribe( () => {
-    let newCards = store.getState().newCards
-    cardsWr1.clear()
-    newCards.forEach( el => {
-        cardsWr1.addCard(el.$el)
-    } )
-} )

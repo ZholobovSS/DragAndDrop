@@ -1,3 +1,6 @@
+import * as ACTIONS from '../redux/actions'
+import store from '../redux/index'
+
 export class Element {
     constructor (data) {
         this.$el = (typeof data === 'object') ? data : document.querySelector(data)
@@ -54,9 +57,10 @@ class Draggable extends Element {
         this.draggableClass = 'draggable'
     }
 
-    onDragStart() {
+    onDragStart(id) {
         this.addHandler('dragstart', ev => {
             this.addClass(this.draggableClass)
+            ev.dataTransfer.setData('id', id)
         })
     }
 
@@ -69,7 +73,7 @@ class Draggable extends Element {
     onDrop() {
         this.addHandler('drop', ev => {
             ev.preventDefault()
-            let $dragEl = document.querySelector(`.${this.draggableClass}`)
+            let $dragEl = store.getState().cards.find( el => el.id === ev.dataTransfer.getData('id'))?.el
             this.$el.appendChild($dragEl)
         })
     }
@@ -94,14 +98,27 @@ export class Card extends Draggable {
                 <p class="card-text">${this.text}</p>
                 <a href="#" class="btn btn-primary">Go somewhere</a>
             </div>` 
+        
         this.render()
+        this.writeToStore()
     }
 
     render() {
         this.$el.classList.add("card","my-3")
         this.$el.insertAdjacentHTML('beforeend', this.template)
-        this.onDragStart()
+        this.onDragStart(this.id)
         this.onDragEnd()
+    }
+
+    writeToStore() {
+
+        store.dispatch( ACTIONS.ADD_NEW({
+            el: this.$el,
+            type: this.type,
+            title: this.title,
+            text: this.text,
+            id: this.id
+        }))
     }
 }
 
@@ -111,6 +128,7 @@ export class CardsWr extends Draggable {
         this.type = +this.$el.dataset.cards
         this.contains = []
         this.setDraggableHandler()
+        this.subscribeToStore()
     }
 
     setDraggableHandler() {
@@ -124,6 +142,17 @@ export class CardsWr extends Draggable {
 
     clear() {
         this.$el.innerHTML = ''
+    }
+
+    subscribeToStore() {
+        store.subscribe( () => {
+            let cards = store.getState().cards
+            this.clear()
+            cards.forEach( el => {
+                el.type === this.type && this.addCard(el.el)
+            })
+            
+        })
     }
 }
 
