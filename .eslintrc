@@ -1,7 +1,7 @@
 {
     "parser": "babel-eslint",
     "rules": {
-        "no-unused-vars": "warr",
+        "no-unused-vars": "warn",
         "semi": ["error", "never"]
     }
 }

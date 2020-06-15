@@ -98,29 +98,79 @@ export class Card extends Draggable {
             <div draggable="true" class="card-body">
                 <h5 class="card-title">${this.title = title}</h5>
                 <p class="card-text">${this.text}</p>
-                <a href="#" class="btn btn-primary">Go somewhere</a>
+                <div class="d-flex">
+                    <button data-previous type="button" class="mr-1 btn btn-primary">Previous</button>
+                    <button data-next data-next type="button" class="mx-2 btn btn-danger">Next</button>
+                </div>
             </div>` 
-        
+        this.nextBtn
+        this.prevBtn
         this.render()
         this.writeToStore()
+        this.unsubscribe = this.subscribeToStore()
     }
 
-    render() {
+    async render() {
         this.$el.classList.add("card","my-3")
-        this.$el.insertAdjacentHTML('beforeend', this.template)
+        await this.$el.insertAdjacentHTML('beforeend', this.template)
+        
+        this.setDefaultBtn()
+        this.setDefaultHandlers() 
+    }
+
+    setDefaultHandlers() {
         this.onDragStart(this.id)
         this.onDragEnd()
+
+        this.nextBtn.addHandler('click', ev => {
+            ev.preventDefault()
+            let cards = store.getState().cards
+            cards = cards.map( el => ((el.id !== this.id) ? el : {...el, type: this.type + 1}))
+            store.dispatch(ACTIONS.CHANGE_TYPE(cards))
+        })
+
+        this.prevBtn.addHandler('click', ev => {
+            ev.preventDefault()
+            let cards = store.getState().cards
+            cards = cards.map( el => ((el.id !== this.id) ? el : {...el, type: this.type - 1}))
+            store.dispatch(ACTIONS.CHANGE_TYPE(cards))
+        })
+    }
+
+    setDefaultBtn() {
+        this.nextBtn = new Element('[data-next]')
+        this.prevBtn = new Element('[data-previous]')
+        this.prevBtn.setDisabled(true)
+        
     }
 
     writeToStore() {
+        store.dispatch(ACTIONS.ADD_NEW(this))
+    }
 
-        store.dispatch( ACTIONS.ADD_NEW({
-            el: this.$el,
-            type: this.type,
-            title: this.title,
-            text: this.text,
-            id: this.id
-        }))
+    setBtnPermissions() {
+        if (this.type === 1) {
+            this.prevBtn.setDisabled(true)
+            this.nextBtn.setDisabled(false)
+        } else if (this.type === 2) {
+            this.prevBtn.setDisabled(false)
+            this.nextBtn.setDisabled(false)
+        } else if (this.type === 3) {
+            this.prevBtn.setDisabled(false)
+            this.nextBtn.setDisabled(true)
+        }
+    }
+
+    updateCard(newType) {
+        this.type = newType
+        this.setBtnPermissions()
+    }
+
+    subscribeToStore() {
+        return store.subscribe(() => {
+            let $currentCard = store.getState().cards.find( el => el.id === this.id )
+            this.updateCard($currentCard.type)
+        }) 
     }
 }
 
@@ -130,7 +180,7 @@ export class CardsWr extends Draggable {
         this.type = +this.$el.dataset.cards
         this.contains = []
         this.setDraggableHandler()
-        this.subscribeToStore()
+        this.unsubscribe = this.subscribeToStore()
     }
 
     setDraggableHandler() {
@@ -147,11 +197,11 @@ export class CardsWr extends Draggable {
     }
 
     subscribeToStore() {
-        store.subscribe( () => {
+        return store.subscribe( () => {
             let cards = store.getState().cards
             this.clear()
             cards.forEach( el => {
-                el.type === this.type && this.addCard(el.el)
+                el.type === this.type && this.addCard(el.$el)
             })
             
         })
