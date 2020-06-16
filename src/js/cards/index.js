@@ -75,7 +75,7 @@ class Draggable extends Element {
             ev.preventDefault()
             let dragID = ev.dataTransfer.getData('id')
             let cards = store.getState().cards
-            cards = cards.map( el => ((el.id !== dragID) ? el : {...el, type}))
+            cards = cards.map( el => ((el.id !== dragID) ? el : el.updateCardType(type)))
             store.dispatch(ACTIONS.CHANGE_TYPE(cards))
         })
     }
@@ -98,16 +98,16 @@ export class Card extends Draggable {
             <div draggable="true" class="card-body">
                 <h5 class="card-title">${this.title = title}</h5>
                 <p class="card-text">${this.text}</p>
-                <div class="d-flex">
+                <div data-btnwr class="d-flex">
                     <button data-previous type="button" class="mr-1 btn btn-primary">Previous</button>
                     <button data-next data-next type="button" class="mx-2 btn btn-danger">Next</button>
                 </div>
             </div>` 
         this.nextBtn
         this.prevBtn
+        this.sort = 1
         this.render()
         this.writeToStore()
-        this.unsubscribe = this.subscribeToStore()
     }
 
     async render() {
@@ -115,6 +115,7 @@ export class Card extends Draggable {
         await this.$el.insertAdjacentHTML('beforeend', this.template)
         
         this.setDefaultBtn()
+        this.setBtnPermissions()
         this.setDefaultHandlers() 
     }
 
@@ -125,52 +126,61 @@ export class Card extends Draggable {
         this.nextBtn.addHandler('click', ev => {
             ev.preventDefault()
             let cards = store.getState().cards
-            cards = cards.map( el => ((el.id !== this.id) ? el : {...el, type: this.type + 1}))
+            cards = cards.map( el => ((el.id !== this.id) ? el : this.updateCardType(this.type + 1)))
             store.dispatch(ACTIONS.CHANGE_TYPE(cards))
         })
 
         this.prevBtn.addHandler('click', ev => {
             ev.preventDefault()
             let cards = store.getState().cards
-            cards = cards.map( el => ((el.id !== this.id) ? el : {...el, type: this.type - 1}))
+            cards = cards.map( el => ((el.id !== this.id) ? el : this.updateCardType(this.type - 1)))
             store.dispatch(ACTIONS.CHANGE_TYPE(cards))
         })
     }
 
     setDefaultBtn() {
-        this.nextBtn = new Element('[data-next]')
-        this.prevBtn = new Element('[data-previous]')
-        this.prevBtn.setDisabled(true)
+        this.nextBtn = new Element(this.$el.querySelector('[data-next]'))
+        this.prevBtn = new Element(this.$el.querySelector('[data-previous]'))
+    }
+
+    setSort() {
+        let cards = store.getState().cards.filter(el => el.type === this.type)
+        if (!cards.length) {
+            this.sort = 1
+        } else {
+            let sortIndex = cards.reduce((acc, el) => ( (el.sort > acc) ? acc = el.sort + 1 : acc ), Number.NEGATIVE_INFINITY)
+            this.sort = sortIndex
+        }
         
     }
 
     writeToStore() {
+        this.setSort()
         store.dispatch(ACTIONS.ADD_NEW(this))
     }
 
     setBtnPermissions() {
-        if (this.type === 1) {
-            this.prevBtn.setDisabled(true)
-            this.nextBtn.setDisabled(false)
-        } else if (this.type === 2) {
-            this.prevBtn.setDisabled(false)
-            this.nextBtn.setDisabled(false)
-        } else if (this.type === 3) {
-            this.prevBtn.setDisabled(false)
-            this.nextBtn.setDisabled(true)
+        switch (this.type) {
+            case 1:
+                this.prevBtn.setDisabled(true)
+                this.nextBtn.setDisabled(false)
+                break
+            case 2:
+                this.prevBtn.setDisabled(false)
+                this.nextBtn.setDisabled(false)
+                break
+            case 3:
+                this.prevBtn.setDisabled(false)
+                this.nextBtn.setDisabled(true)
+            default:
+                break
         }
     }
 
-    updateCard(newType) {
+    updateCardType(newType) {
         this.type = newType
         this.setBtnPermissions()
-    }
-
-    subscribeToStore() {
-        return store.subscribe(() => {
-            let $currentCard = store.getState().cards.find( el => el.id === this.id )
-            this.updateCard($currentCard.type)
-        }) 
+        return this
     }
 }
 
