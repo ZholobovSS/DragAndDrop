@@ -73,10 +73,7 @@ class Draggable extends Element {
     onDrop(type) {
         this.addHandler('drop', ev => {
             ev.preventDefault()
-            let dragID = ev.dataTransfer.getData('id')
-            let cards = store.getState().cards
-            cards = cards.map( el => ((el.id !== dragID) ? el : el.updateCardType(type)))
-            store.dispatch(ACTIONS.CHANGE_TYPE(cards))
+            this.updateOnDrop(type, ev)
         })
     }
 
@@ -84,6 +81,13 @@ class Draggable extends Element {
         this.addHandler('dragend', ev => {
             this.removeClass('draggable')
         })
+    }
+
+    updateOnDrop(type, ev) {
+        let dragID = ev.dataTransfer.getData('id')
+        let cards = store.getState().cards
+        cards = cards.map( el => ((el.id !== dragID) ? el : el.updateCardType(type)))
+        store.dispatch(ACTIONS.CHANGE_TYPE(cards))
     }
 }
 
@@ -112,11 +116,12 @@ export class Card extends Draggable {
 
     async render() {
         this.$el.classList.add("card","my-3")
-        await this.$el.insertAdjacentHTML('beforeend', this.template)
+        this.$el.insertAdjacentHTML('beforeend', this.template)
         
         this.setDefaultBtn()
         this.setBtnPermissions()
         this.setDefaultHandlers() 
+        this.setSort()
     }
 
     setDefaultHandlers() {
@@ -144,7 +149,7 @@ export class Card extends Draggable {
     }
 
     setSort() {
-        let cards = store.getState().cards.filter(el => el.type === this.type)
+        let cards = store.getState().cards.filter(el => el.type === this.type && el.id !== this.id )
         if (!cards.length) {
             this.sort = 1
         } else {
@@ -155,7 +160,7 @@ export class Card extends Draggable {
     }
 
     writeToStore() {
-        this.setSort()
+        
         store.dispatch(ACTIONS.ADD_NEW(this))
     }
 
@@ -180,6 +185,7 @@ export class Card extends Draggable {
     updateCardType(newType) {
         this.type = newType
         this.setBtnPermissions()
+        this.setSort()
         return this
     }
 }
@@ -210,8 +216,9 @@ export class CardsWr extends Draggable {
         return store.subscribe( () => {
             let cards = store.getState().cards
             this.clear()
-            cards.forEach( el => {
-                el.type === this.type && this.addCard(el.$el)
+            cards.filter(el => el.type === this.type).sort((a,b) => a.sort - b.sort)
+            .forEach( el => {
+                this.addCard(el.$el)
             })
             
         })
