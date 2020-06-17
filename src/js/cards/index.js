@@ -1,5 +1,6 @@
 import * as ACTIONS from '../redux/actions'
 import store from '../redux/index'
+import { debounce, testFunc } from './addFuncs'
 
 export class Element {
     constructor (data) {
@@ -60,13 +61,14 @@ class Draggable extends Element {
     onDragStart(id) {
         this.addHandler('dragstart', ev => {
             this.addClass(this.draggableClass)
-            ev.dataTransfer.setData('id', id)
+            store.dispatch(ACTIONS.CHANGE_DRAG(id))
         })
     }
 
-    onDragOver() {
+    onDragOver(type) {
         this.addHandler('dragover', ev => {
             ev.preventDefault()
+            testFunc(ev, this, type, store)
         })
     }
 
@@ -80,13 +82,14 @@ class Draggable extends Element {
     onDragEnd() {
         this.addHandler('dragend', ev => {
             this.removeClass('draggable')
+            ev.dataTransfer.clearData()
         })
     }
 
     updateOnDrop(type, ev) {
         let dragID = ev.dataTransfer.getData('id')
         let cards = store.getState().cards
-        cards = cards.map( el => ((el.id !== dragID) ? el : el.updateCardType(type)))
+        cards = cards.map( el => ((el.id !== dragID) ? el : el.updateCard(type, false)))
         store.dispatch(ACTIONS.CHANGE_TYPE(cards))
     }
 }
@@ -94,9 +97,9 @@ class Draggable extends Element {
 export class Card extends Draggable {
     constructor(type, title, text, id) {
         super(document.createElement('div'))
-        this.type = type
         this.title = title
         this.text = text
+        this.type = type
         this.id = id
         this.template = ` 
             <div draggable="true" class="card-body">
@@ -109,59 +112,44 @@ export class Card extends Draggable {
             </div>` 
         this.nextBtn
         this.prevBtn
-        this.sort = 1
+       
         this.render()
+        this.setDefaultBtn()
         this.writeToStore()
+        this.unsubscribe = this.subscribeToStore()
     }
 
     async render() {
         this.$el.classList.add("card","my-3")
         this.$el.insertAdjacentHTML('beforeend', this.template)
-        
-        this.setDefaultBtn()
-        this.setBtnPermissions()
-        this.setDefaultHandlers() 
-        this.setSort()
+        this.registerBtn()
     }
 
-    setDefaultHandlers() {
+    registerBtn() {
+        this.setDefaultBtn()
+        this.setBtnPermissions()
+        this.setDefaulBtntHandlers()
+    }
+
+    setDefaulBtntHandlers() {
         this.onDragStart(this.id)
         this.onDragEnd()
 
         this.nextBtn.addHandler('click', ev => {
             ev.preventDefault()
-            let cards = store.getState().cards
-            cards = cards.map( el => ((el.id !== this.id) ? el : this.updateCardType(this.type + 1)))
-            store.dispatch(ACTIONS.CHANGE_TYPE(cards))
+            store.dispatch(ACTIONS.UPDATE_INFO({
+                id: this.id,
+                type: this.type + 1
+            }))
         })
 
         this.prevBtn.addHandler('click', ev => {
             ev.preventDefault()
-            let cards = store.getState().cards
-            cards = cards.map( el => ((el.id !== this.id) ? el : this.updateCardType(this.type - 1)))
-            store.dispatch(ACTIONS.CHANGE_TYPE(cards))
+            store.dispatch(ACTIONS.UPDATE_INFO({
+                id: this.id,
+                type: this.type - 1
+            }))
         })
-    }
-
-    setDefaultBtn() {
-        this.nextBtn = new Element(this.$el.querySelector('[data-next]'))
-        this.prevBtn = new Element(this.$el.querySelector('[data-previous]'))
-    }
-
-    setSort() {
-        let cards = store.getState().cards.filter(el => el.type === this.type && el.id !== this.id )
-        if (!cards.length) {
-            this.sort = 1
-        } else {
-            let sortIndex = cards.reduce((acc, el) => ( (el.sort > acc) ? acc = el.sort + 1 : acc ), Number.NEGATIVE_INFINITY)
-            this.sort = sortIndex
-        }
-        
-    }
-
-    writeToStore() {
-        
-        store.dispatch(ACTIONS.ADD_NEW(this))
     }
 
     setBtnPermissions() {
@@ -182,12 +170,39 @@ export class Card extends Draggable {
         }
     }
 
-    updateCardType(newType) {
-        this.type = newType
-        this.setBtnPermissions()
-        this.setSort()
-        return this
+    setDefaultBtn() {
+        this.nextBtn = new Element(this.$el.querySelector('[data-next]'))
+        this.prevBtn = new Element(this.$el.querySelector('[data-previous]'))
     }
+
+    getDefaultSort() {
+        return Math.max(...store.getState().cardsInfo.filter( el => el.type === this.type ).map(el => el?.sort), 0) + 1 
+    }
+
+    writeToStore() {
+        store.dispatch(ACTIONS.ADD_NEW_CLASS(this))
+        store.dispatch(ACTIONS.ADD_NEW_INFO({
+            id: this.id,
+            type: this.type,
+            sort: this.getDefaultSort(),
+            draggable: false
+        }))
+    }
+
+    update(type) {
+        this.type = type
+        this.setBtnPermissions()
+    }
+
+    subscribeToStore() {
+        return store.subscribe( () => {
+            console.log(1)
+            let currentCardInfo = store.getState().cardsInfo.find( el => el.id === this.id )
+            this.update(currentCardInfo.type)
+        })
+    }
+
+    
 }
 
 export class CardsWr extends Draggable {
@@ -200,7 +215,7 @@ export class CardsWr extends Draggable {
     }
 
     setDraggableHandler() {
-        this.onDragOver()
+        this.onDragOver(this.type)
         this.onDrop(this.type)
     }
 
@@ -214,11 +229,13 @@ export class CardsWr extends Draggable {
 
     subscribeToStore() {
         return store.subscribe( () => {
-            let cards = store.getState().cards
+            let { cards, cardsInfo } = store.getState()
             this.clear()
-            cards.filter(el => el.type === this.type).sort((a,b) => a.sort - b.sort)
-            .forEach( el => {
-                this.addCard(el.$el)
+
+            cardsInfo.filter(el => el.type === this.type)
+                .sort((a,b) => a.sort - b.sort)
+                .forEach( el => {
+                    this.addCard(cards.find( cardsEl => cardsEl.id === el.id ).$el)
             })
             
         })

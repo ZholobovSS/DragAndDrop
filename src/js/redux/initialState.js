@@ -1,5 +1,6 @@
 const initialState = {
-    cards: []
+    cards: [],
+    cardsInfo: []
 }
 
 export default initialState

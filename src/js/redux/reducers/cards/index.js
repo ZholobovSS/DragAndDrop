@@ -2,10 +2,8 @@ import * as CONSTANTS from '../../constants'
 
 const newCards = ( state = [], action ) => {
     switch (action.type) {
-        case CONSTANTS.ADD_NEW:
+        case CONSTANTS.ADD_NEW_CLASS:
             return [ ...state, action.payload ]
-        case CONSTANTS.CHANGE_TYPE: 
-            return [ ...action.payload ]
         default:
             return state
     }
