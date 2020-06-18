@@ -1,6 +1,6 @@
 import * as ACTIONS from '../redux/actions'
 import store from '../redux/index'
-import { debounce, testFunc } from './addFuncs'
+import { debounce, setFlySort } from './addFuncs'
 
 export class Element {
     constructor (data) {
@@ -61,14 +61,19 @@ class Draggable extends Element {
     onDragStart(id) {
         this.addHandler('dragstart', ev => {
             this.addClass(this.draggableClass)
-            store.dispatch(ACTIONS.CHANGE_DRAG(id))
+            ev.dataTransfer.setData('id', id)
+            store.dispatch(ACTIONS.RERENDER(false))
+            store.dispatch(ACTIONS.UPDATE_INFO({
+                id: id,
+                draggable: true,
+            }))
         })
     }
 
     onDragOver(type) {
         this.addHandler('dragover', ev => {
             ev.preventDefault()
-            testFunc(ev, this, type, store)
+            setFlySort(ev, this, type, store)
         })
     }
 
@@ -88,9 +93,12 @@ class Draggable extends Element {
 
     updateOnDrop(type, ev) {
         let dragID = ev.dataTransfer.getData('id')
-        let cards = store.getState().cards
-        cards = cards.map( el => ((el.id !== dragID) ? el : el.updateCard(type, false)))
-        store.dispatch(ACTIONS.CHANGE_TYPE(cards))
+        store.dispatch(ACTIONS.UPDATE_INFO({
+                id: dragID,
+                type: type,
+                draggable: false,
+        }))
+        store.dispatch(ACTIONS.RERENDER(true))
     }
 }
 
@@ -139,16 +147,20 @@ export class Card extends Draggable {
             ev.preventDefault()
             store.dispatch(ACTIONS.UPDATE_INFO({
                 id: this.id,
-                type: this.type + 1
+                type: this.type + 1,
+                sort: this.getBtnSort(this.type + 1)
             }))
+            store.dispatch(ACTIONS.RERENDER(true))
         })
 
         this.prevBtn.addHandler('click', ev => {
             ev.preventDefault()
             store.dispatch(ACTIONS.UPDATE_INFO({
                 id: this.id,
-                type: this.type - 1
+                type: this.type - 1,
+                sort: this.getBtnSort(this.type - 1)
             }))
+            store.dispatch(ACTIONS.RERENDER(true))
         })
     }
 
@@ -175,6 +187,10 @@ export class Card extends Draggable {
         this.prevBtn = new Element(this.$el.querySelector('[data-previous]'))
     }
 
+    getBtnSort(type) {
+        return Math.max(...store.getState().cardsInfo.filter( el => el.type === type ).map(el => el?.sort), 0) + 1
+    }
+
     getDefaultSort() {
         return Math.max(...store.getState().cardsInfo.filter( el => el.type === this.type ).map(el => el?.sort), 0) + 1 
     }
@@ -185,7 +201,8 @@ export class Card extends Draggable {
             id: this.id,
             type: this.type,
             sort: this.getDefaultSort(),
-            draggable: false
+            draggable: false,
+            rerender: true,
         }))
     }
 
@@ -196,9 +213,11 @@ export class Card extends Draggable {
 
     subscribeToStore() {
         return store.subscribe( () => {
-            console.log(1)
-            let currentCardInfo = store.getState().cardsInfo.find( el => el.id === this.id )
-            this.update(currentCardInfo.type)
+            let {cardsInfo, rerender} = store.getState()
+            if (rerender) {
+                let currentCardInfo = cardsInfo.find( el => el.id === this.id && el.rerender)
+                currentCardInfo && this.update(currentCardInfo.type)
+            }
         })
     }
 
@@ -220,6 +239,7 @@ export class CardsWr extends Draggable {
     }
 
     addCard(card) {
+        console.log('render')
         this.$el.appendChild(card)
     }
 
@@ -229,15 +249,15 @@ export class CardsWr extends Draggable {
 
     subscribeToStore() {
         return store.subscribe( () => {
-            let { cards, cardsInfo } = store.getState()
-            this.clear()
-
-            cardsInfo.filter(el => el.type === this.type)
+            let { cards, cardsInfo, rerender } = store.getState()
+            if (rerender) {
+                this.clear()
+                cardsInfo.filter(el => el.type === this.type)
                 .sort((a,b) => a.sort - b.sort)
                 .forEach( el => {
-                    this.addCard(cards.find( cardsEl => cardsEl.id === el.id ).$el)
+                    this.addCard(cards.find( cardsEl => cardsEl.id === el.id).$el)
             })
-            
+            }
         })
     }
 }

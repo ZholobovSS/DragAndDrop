@@ -20,3 +20,10 @@ export const UPDATE_INFO = (newCardInfo) => {
         payload: newCardInfo
     }
 }
+
+export const RERENDER = (flag) => {
+    return {
+        type: CONSTANTS.RERENDER,
+        payload: flag
+    }
+}

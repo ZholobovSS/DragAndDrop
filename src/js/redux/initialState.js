@@ -1,6 +1,7 @@
 const initialState = {
     cards: [],
-    cardsInfo: []
+    cardsInfo: [],
+    rerender: true
 }
 
 export default initialState

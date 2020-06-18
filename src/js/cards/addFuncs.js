@@ -1,32 +1,65 @@
+import * as ACTIONS from '../redux/actions'
 
 export function debounce( f, ms ) {
     let isReady = true
 
     return function() {
         if (!isReady) return
-        f.apply(this, arguments)
+            f.apply(this, arguments)
         isReady = false
         setTimeout( () => isReady = true, ms )
     }
 }
 
-let testFunc = debounce((ev, that, type, store) => {
+let setFlySort = debounce((ev, that, type, store) => {
 
-    console.log(id)
-    let cards = store.getState().cards.filter(el => el.type === type && el.id !== id)
+    let { cards, cardsInfo, rerender } = store.getState()
+    let draggEl = cardsInfo.find( el => el.draggable )
+
+    if (draggEl) {
+        let draggID = draggEl?.id
+        let cardsFilter = cards.filter(el => el.type === type && el.id !== draggID).sort( (a,b) => {
+            return cardsInfo.find(el => el.id === a.id).sort - cardsInfo.find(el => el.id === b.id).sort
+        } )
+
+        console.log('cards count: ' + cardsFilter.length)
+
+        let sortIndex = cardsFilter.reduce((acc, el) => {
+            
+            if ( el.$el.getBoundingClientRect().y + el.$el.offsetHeight / 2 < ev.clientY ) {
+                console.log(`Element: ${el.$el.getBoundingClientRect().y + el.$el.offsetHeight / 2}`)
+                console.log(`Cursor: ${ev.clientY}`)
+                console.log(`Sort: ${cardsInfo.find(currentEl => currentEl.id === el.id)?.sort}`)
+                return cardsInfo.find(currentEl => currentEl.id === el.id)?.sort + 1
+            } else {
+                return acc
+            }
+        }, Number.NEGATIVE_INFINITY)
+
+        sortIndex = (sortIndex < 0) ? 1 : sortIndex 
+        console.log(sortIndex, type)
 
 
+        if ( sortIndex !== draggEl.sort || type !== draggEl.type ) {
 
-    let sortIndex = cards.reduce( (acc, el) => {
-        if ( el.$el.getBoundingClientRect().y + el.$el.offsetHeight / 2 < ev.clientY ) {
-            acc = el.sort + 1
+            store.dispatch(ACTIONS.UPDATE_INFO({
+                id: draggID,
+                sort: sortIndex,
+                type: type
+            }))
+
+            cardsInfo.filter( el => el.sort >= sortIndex && el.type === type && el.id !== draggID).forEach( el => {
+                store.dispatch(ACTIONS.UPDATE_INFO({
+                    id: el.id,
+                    sort: el.sort + 1,
+                }))
+            })
         }
-    }, Number.NEGATIVE_INFINITY)
+    }
 
-    sortIndex = (sortIndex < 0 || !sortIndex) ? 1 : sortIndex 
+    
+
+},150)
 
 
-},500)
-
-
-export {testFunc}
+export { setFlySort }
