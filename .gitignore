@@ -1,4 +1,7 @@
 # Exclude node's extentions files
 node_modules/
 
+# Exclude build dir
+build/
+
 .DS_Store

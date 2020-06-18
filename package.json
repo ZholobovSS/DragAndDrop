@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/ZholobovSS/DragAndDrop/issues"
   },
-  "homepage": "https://github.com/ZholobovSS/DragAndDrop#readme",
+  "homepage": "./",
   "browserslist": "> 0.25%, not dead",
   "devDependencies": {
     "@babel/core": "^7.10.2",

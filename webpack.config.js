@@ -24,7 +24,6 @@ const optimizationConfig = () => {
 const PROJECTS_PATHS = {
     js: (isDev) ? path.resolve(__dirname, 'build') : path.resolve(__dirname, 'build/js/'),
     css: (isDev) ? 'boundle.css' : '../css/boundle.css',
-
 }
 
 module.exports = {
@@ -44,6 +43,7 @@ module.exports = {
         }),
         new HTMLWebpackPlugin({
             template: path.resolve(__dirname, 'src/index.html'),
+            filename: isDev ? 'index.html' : '../index.html'
         }),
     ],
     optimization: optimizationConfig(),
