@@ -22,22 +22,17 @@ let setFlySort = debounce((ev, that, type, store) => {
             return cardsInfo.find(el => el.id === a.id).sort - cardsInfo.find(el => el.id === b.id).sort
         } )
 
-        console.log('cards count: ' + cardsFilter.length)
-
         let sortIndex = cardsFilter.reduce((acc, el) => {
             
             if ( el.$el.getBoundingClientRect().y + el.$el.offsetHeight / 2 < ev.clientY ) {
-                console.log(`Element: ${el.$el.getBoundingClientRect().y + el.$el.offsetHeight / 2}`)
-                console.log(`Cursor: ${ev.clientY}`)
-                console.log(`Sort: ${cardsInfo.find(currentEl => currentEl.id === el.id)?.sort}`)
                 return cardsInfo.find(currentEl => currentEl.id === el.id)?.sort + 1
             } else {
                 return acc
             }
         }, Number.NEGATIVE_INFINITY)
 
+
         sortIndex = (sortIndex < 0) ? 1 : sortIndex 
-        console.log(sortIndex, type)
 
 
         if ( sortIndex !== draggEl.sort || type !== draggEl.type ) {
@@ -57,9 +52,7 @@ let setFlySort = debounce((ev, that, type, store) => {
         }
     }
 
-    
-
-},150)
+}, 150)
 
 
 export { setFlySort }

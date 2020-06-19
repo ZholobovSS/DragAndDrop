@@ -239,7 +239,6 @@ export class CardsWr extends Draggable {
     }
 
     addCard(card) {
-        console.log('render')
         this.$el.appendChild(card)
     }
 
